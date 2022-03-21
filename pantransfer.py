@@ -58,7 +58,7 @@ class GUI:
         self.init_window_name = init_window_name
 
     def set_init_window(self):
-        self.init_window_name.title("百度云批量转存工具_v1.0 / by mobclix")
+        self.init_window_name.title("百度云批量转存工具_v1.1 / by mobclix")
         self.init_window_name.geometry(str(S_WIDTH) + 'x' + str(S_HEIGHT) + '+'
                                        + str((self.init_window_name.winfo_screenwidth() - S_WIDTH) // 2) + '+'
                                        + str((self.init_window_name.winfo_screenheight() - S_HEIGHT) // 2 - 18))
