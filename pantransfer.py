@@ -38,7 +38,7 @@ VERIFY_URL = 'https://pan.baidu.com/share/verify'
 TRANSFER_URL = 'https://pan.baidu.com/share/transfer'
 TRANSFER_REPID_URL = 'https://pan.baidu.com/api/rapidupload'
 TRANSFER_RENAME_URL = 'https://pan.baidu.com/api/filemanager?async=2&onnest=fail&clienttype=0&opera=rename&app_id=250528&web=1'
-GET_DIR_LIST_URL = 'https://pan.baidu.com/api/list?order=time&desc=1&showempty=0&web=1&page=1&num=1000&dir=%2F'
+GET_DIR_LIST_URL = 'https://pan.baidu.com/api/list?order=time&desc=1&showempty=0&web=1&page=1&num=1000'
 CREATE_DIR_URL = 'https://pan.baidu.com/api/create?a=commit'
 
 
@@ -105,7 +105,7 @@ class GUI:
                                    foreground="#0000ff", cursor='mouse')
         self.label_example.place(relx=0.82, rely=0.92, relheight=0.06, relwidth=0.1)
         self.label_example.bind("<Button-1>",
-                                lambda e: webbrowser.open("https://github.com/mobclix/PanTransfers", new=0))
+                                lambda e: webbrowser.open("https://www.bing.com", new=0))
 
 
 def random_sleep(start=1, end=3):
@@ -204,8 +204,8 @@ class PanTransfer:
         else:
             raise ValueError('转存失败！errno:' + str(data['errno']))
 
-    def get_dir_list(self):
-        url = GET_DIR_LIST_URL + f'&bdstoken={self.bdstoken}'
+    def get_dir_list(self, dir_name):
+        url = GET_DIR_LIST_URL + f'&dir={dir_name}&bdstoken={self.bdstoken}'
         response = self.get(url)
         data = response.json()
         if data['errno'] == 0:
@@ -218,17 +218,24 @@ class PanTransfer:
             ValueError('获取网盘目录列表失败! errno:' + data['errno'] + '\n\n')
 
     def create_dir(self):
-        dir_list_json = self.get_dir_list()
-        dir_list = [dir_json['server_filename'] for dir_json in dir_list_json]
-        if self.dir_name and self.dir_name not in dir_list:
-            url = CREATE_DIR_URL + f'&bdstoken={self.bdstoken}'
-            post_data = {'path': self.dir_name, 'isdir': '1', 'block_list': '[]', }
-            response = self.post(url, post_data)
-            data = response.json()
-            if data['errno'] == 0:
-                self.logs(END, '创建目录成功！\n\n')
-            else:
-                self.logs(END, '创建目录失败！路径中不能包含以下任何字符: \\:*?"<>|\n\n')
+        if self.dir_name != '/' and self.dir_name != '':
+            # dir_list_json = self.get_dir_list()
+            # dir_list = [dir_json['server_filename'] for dir_json in dir_list_json]
+            dir_name_list = self.dir_name.split('/')
+            dir_name = dir_name_list[len(dir_name_list) - 1]
+            dir_name_list.pop()
+            path = '/'.join(dir_name_list) + '/'
+            dir_list_json = self.get_dir_list(path)
+            dir_list = [dir_json['server_filename'] for dir_json in dir_list_json]
+            if dir_name and dir_name not in dir_list:
+                url = CREATE_DIR_URL + f'&bdstoken={self.bdstoken}'
+                post_data = {'path': self.dir_name, 'isdir': '1', 'block_list': '[]', }
+                response = self.post(url, post_data)
+                data = response.json()
+                if data['errno'] == 0:
+                    self.logs(END, '创建目录成功！\n\n')
+                else:
+                    self.logs(END, '创建目录失败！路径中不能包含以下任何字符: \\:*?"<>|\n\n')
 
     def transfer_files_rename(self, fs_id, path, name, unzip_code):
         try:
@@ -255,7 +262,7 @@ class PanTransfer:
             if 'BDCLND=' in cookie:
                 cookie = re.sub(r'BDCLND=(\S+?);', f'BDCLND={bdclnd};', cookie)
             else:
-                cookie += f';BDCLND={bdclnd}'
+                cookie += f';BDCLND={bdclnd};'
             self.session.headers['Cookie'] = cookie
             return data
         elif data['errno'] == -9:
