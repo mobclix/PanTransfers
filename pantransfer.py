@@ -58,7 +58,7 @@ class GUI:
         self.init_window_name = init_window_name
 
     def set_init_window(self):
-        self.init_window_name.title("百度云批量转存工具_v1.1 / by mobclix")
+        self.init_window_name.title("百度云批量转存工具_v1.2 / by mobclix")
         self.init_window_name.geometry(str(S_WIDTH) + 'x' + str(S_HEIGHT) + '+'
                                        + str((self.init_window_name.winfo_screenwidth() - S_WIDTH) // 2) + '+'
                                        + str((self.init_window_name.winfo_screenheight() - S_HEIGHT) // 2 - 18))
@@ -105,7 +105,7 @@ class GUI:
                                    foreground="#0000ff", cursor='mouse')
         self.label_example.place(relx=0.82, rely=0.92, relheight=0.06, relwidth=0.1)
         self.label_example.bind("<Button-1>",
-                                lambda e: webbrowser.open("https://www.bing.com", new=0))
+                                lambda e: webbrowser.open("https://github.com/mobclix/PanTransfers", new=0))
 
 
 def random_sleep(start=1, end=3):
@@ -114,7 +114,7 @@ def random_sleep(start=1, end=3):
 
 
 def check_link_type(link):
-    if link.find('https://pan.baidu.com/s/') != -1:
+    if link.find('pan.baidu.com/s/') != -1:
         link_type = 'common'
     elif link.count('#') > 2:
         link_type = 'rapid'
@@ -248,11 +248,13 @@ class PanTransfer:
                 self.logs(END, '重命名成功！:' + newname + '\n')
             else:
                 self.logs(END, '重命名失败！errno:' + str(data['errno']) + '\n')
+            time.sleep(1)
         except Exception as e:
             self.logs(END, '重命名失败！err:' + str(e) + '\n')
 
     def verify_link(self, link_url, pass_code):
-        url = VERIFY_URL + f'?surl={link_url[25:48]}'
+        sp = link_url.split('/')
+        url = VERIFY_URL + '?surl=' + sp[len(sp)-1][1:]
         post_data = {'pwd': pass_code, 'vcode': '', 'vcode_str': '', }
         response = self.post(url, post_data)
         data = response.json()
@@ -317,6 +319,11 @@ class PanTransfer:
                 else:
                     raise ValueError('未知链接类型')
             except Exception as e:
+                try:
+                    with open('error.txt', 'a') as f:
+                        f.write(link + '\n')
+                except BaseException:
+                    print('export_txt error')
                 self.logs(END, 'Transfer Error --- ' + str(e) + '\n\n')
         self.logs(END, '转存完成！' + '\n')
 
